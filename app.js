@@ -50,23 +50,37 @@ function getChosenExtType() {
   }
 }
 
-/** @param {ArrayBufferLike} buffer */
-function createResultElt(buffer) {
-  const id = 'result-elt';
-  document.getElementById(id)?.remove();
+/**
+ * @param {ArrayBufferLike} buffer
+ * @param {string} fileName
+ */
+function createResultElt(buffer, fileName) {
   const ext = getChosenExtType();
   const [tag, mimeType] = ext === 'gif'
     ? ['img', 'image']
     : ['video', 'video']
   ;
-  const elt = document.createElement(tag);
-  elt.id = id;
-  elt.src = URL.createObjectURL(new Blob([buffer], { type: `${mimeType}/${ext}` }));
+  const url = URL.createObjectURL(new Blob([buffer], { type: `${mimeType}/${ext}` }));
+
+  const videoId = 'result-video-elt';
+  document.getElementById(videoId)?.remove();
+  const videoElt = document.createElement(tag);
+  videoElt.id = videoId;
+  videoElt.src = url;
   if (tag === 'video') {
-    elt.loop = true;
-    elt.controls = true;
+    videoElt.loop = true;
+    videoElt.controls = true;
   }
-  return elt;
+
+  const downloadId = 'result-download-elt';
+  document.getElementById(downloadId)?.remove();
+  const downloadElt = document.createElement('a');
+  downloadElt.id = downloadId;
+  downloadElt.href = url;
+  downloadElt.download = fileName;
+  downloadElt.textContent = 'Download';
+
+  bodyElt.prepend(videoElt, downloadElt);
 }
 
 /** @param {File} file */
@@ -79,7 +93,8 @@ async function vincentify(file) {
   ffmpeg.FS('writeFile', file.name, await filePromise);
 
   const ext = getChosenExtType();
-  const outputFilename = `output.${ext}`;
+  const basename = file.name.replace(/(.*)\..*/, '$1');
+  const outputFilename = `${basename}-vincent.${ext}`;
   // scaling to speed up processing & to make sure the height can be divided
   // by 2 (which is required by libx264)
   await ffmpeg.run(
@@ -94,8 +109,8 @@ async function vincentify(file) {
   );
   updateStatus('Completed vincentification');
   const outputData = ffmpeg.FS('readFile', outputFilename);
-  const resultElt = createResultElt(outputData.buffer);
-  bodyElt.prepend(resultElt);
+
+  createResultElt(outputData.buffer, outputFilename);
   runElt.disabled = false;
 }
 
