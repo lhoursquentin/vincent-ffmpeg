@@ -10,7 +10,13 @@ const vincentFileName = 'vincent-file'; // name doesn't matter much here
 const bodyElt = document.getElementById('body');
 const statusElt = document.getElementById('status');
 const fileInputElt = document.getElementById('file-input');
-fileInputElt.addEventListener('change', vincentify);
+const runElt = document.getElementById('run');
+
+let inputFile;
+updateInputFile(fileInputElt.files[0]);
+
+fileInputElt.addEventListener('change', onFileSelection);
+runElt.addEventListener('click', () => vincentify(inputFile));
 
 const ffmpeg = createFFmpeg({ log: true, corePath, workerPath, wasmPath });
 // Launch async processes ASAP, await them later
@@ -49,22 +55,23 @@ function createResultElt(buffer) {
   const id = 'result-elt';
   document.getElementById(id)?.remove();
   const ext = getChosenExtType();
-  const { tag, mimeType } = ext === 'gif'
-    ? { tag: 'img', mimeType: 'image' }
-    : { tag: 'video', mimeType: 'video' }
+  const [tag, mimeType] = ext === 'gif'
+    ? ['img', 'image']
+    : ['video', 'video']
   ;
   const elt = document.createElement(tag);
   elt.id = id;
   elt.src = URL.createObjectURL(new Blob([buffer], { type: `${mimeType}/${ext}` }));
   if (tag === 'video') {
-    elt.controls = true;
     elt.loop = true;
+    elt.controls = true;
   }
   return elt;
 }
 
-/** @param {Event} event */
-async function vincentify({ target: { files: [file] } }) {
+/** @param {File} file */
+async function vincentify(file) {
+  runElt.disabled = true;
   updateStatus('Vincentifying, please wait...');
   const filePromise = fetchFile(file);
   await ffmpegLoadPromise;
@@ -87,6 +94,24 @@ async function vincentify({ target: { files: [file] } }) {
   );
   updateStatus('Completed vincentification');
   const outputData = ffmpeg.FS('readFile', outputFilename);
-  const resultElt = createResultElt(outputData.buffer)
+  const resultElt = createResultElt(outputData.buffer);
   bodyElt.prepend(resultElt);
+  runElt.disabled = false;
+}
+
+/** @param {File | undefined} file */
+function updateInputFile(file) {
+  const isValid = file !== undefined;
+  if (isValid) {
+    inputFile = file;
+    updateStatus(`Ready to vincentify ${file.name}`);
+  } else {
+    updateStatus('Please select an mp4/gif file to start');
+  }
+  runElt.disabled = !isValid;
+}
+
+/** @param {Event} event */
+function onFileSelection({ target: { files: [file] } }) {
+  updateInputFile(file);
 }

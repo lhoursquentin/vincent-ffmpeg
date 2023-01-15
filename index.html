@@ -3,11 +3,15 @@
     <style>
       body {
         padding: 1rem;
-        gap: 0.25rem;
+        gap: 1rem;
         font-family: sans-serif;
         display: flex;
         flex-direction: column;
         align-items: center;
+      }
+      p {
+        padding: 0;
+        margin: 0;
       }
       fieldset {
         display: flex;
@@ -16,11 +20,12 @@
     </style>
   </head>
   <body id="body">
-    <p id="status">Please select an mp4/gif file to start</p>
-    <input id="file-input" type="file">
     <fieldset id="ext-fieldset">
       <legend>Choose your ouput type</legend>
     </fieldset>
+    <input id="file-input" type="file">
+    <p id="status">Please select an mp4/gif file to start</p>
+    <button id="run" type="button" disabled>Run</button>
     <script type="module" src="./app.js"></script>
   </body>
 </html>
