@@ -1,29 +1,41 @@
 import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
-import corePath from './assets/ffmpeg-core.js?url'
-import wasmPath from './assets/ffmpeg-core.wasm?url'
-import workerPath from './assets/ffmpeg-core.worker.js?url'
-let ffmpeg = null;
 
-const transcode = async ({ target: { files } }) => {
-  if (ffmpeg === null) {
-    ffmpeg = createFFmpeg({ log: true, corePath, workerPath, wasmPath });
-  }
-  const message = document.getElementById('message');
-  const bgFile = files[0];
-  const vincentFile = files[1];
-  message.innerHTML = 'Loading ffmpeg-core.js';
-  if (!ffmpeg.isLoaded()) {
-    await ffmpeg.load();
-  }
-  ffmpeg.FS('writeFile', bgFile.name, await fetchFile(bgFile));
-  ffmpeg.FS('writeFile', vincentFile.name, await fetchFile(vincentFile));
-  message.innerHTML = 'Start transcoding';
-  const outputFilename = 'output.mp4';
+import corePath from './assets/ffmpeg-core.js?url';
+import workerPath from './assets/ffmpeg-core.worker.js?url';
+import wasmPath from './assets/ffmpeg-core.wasm?url';
+import vincentGreenScreenUrl from './assets/vincent-green-screen.webm';
+
+const outputFilename = 'output.mp4';
+const vincentFileName = 'vincent-file'; // name doesn't matter much here
+
+const videoElt = document.getElementById('output-video');
+const statusElt = document.getElementById('status');
+const fileInputElt = document.getElementById('file-input');
+fileInputElt.addEventListener('change', vincentify);
+
+const ffmpeg = createFFmpeg({ log: true, corePath, workerPath, wasmPath });
+// Launch async processes ASAP, await them later
+const ffmpegLoadPromise = ffmpeg.load();
+const vincentFilePromise = fetchFile(vincentGreenScreenUrl);
+
+/** @param {string} status */
+function updateStatus(status) {
+  statusElt.textContent = status;
+}
+
+/** @param {Event} event */
+async function vincentify({ target: { files: [file] } }) {
+  updateStatus('Vincentifying, please wait...');
+  const filePromise = fetchFile(file);
+  await ffmpegLoadPromise;
+  ffmpeg.FS('writeFile', vincentFileName, await vincentFilePromise);
+  ffmpeg.FS('writeFile', file.name, await filePromise);
+
+  // scaling to speed up processing & to make sure the height can be divided
+  // by 2 (which is required by libx264)
   await ffmpeg.run(
-    '-i',
-    bgFile.name,
-    '-i',
-    vincentFile.name,
+    '-i', file.name,
+    '-i', vincentFileName,
     '-filter_complex',
     `[0:v]scale=-2:200[input];
      [1:v]scale=-2:200,colorkey=0x00ff00:0.3:0.2[vincent];
@@ -31,12 +43,7 @@ const transcode = async ({ target: { files } }) => {
     '-map', '[out]',
     outputFilename
   );
-  message.innerHTML = 'Complete transcoding';
-  const data = ffmpeg.FS('readFile', outputFilename);
-
-  const video = document.getElementById('output-video');
-  video.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+  updateStatus('Completed vincentification');
+  const outputData = ffmpeg.FS('readFile', outputFilename);
+  videoElt.src = URL.createObjectURL(new Blob([outputData.buffer], { type: 'video/mp4' }));
 }
-const elm = document.getElementById('uploader');
-elm.addEventListener('change', transcode);
-
