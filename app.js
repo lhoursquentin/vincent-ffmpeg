@@ -101,9 +101,9 @@ async function vincentify(file) {
     '-i', file.name,
     '-i', vincentFileName,
     '-filter_complex',
-    `[0:v]scale=-2:200[input];
-     [1:v]scale=-2:200,colorkey=0x00ff00:0.3:0.2[vincent];
-     [input][vincent]overlay=shortest=1[out]`,
+    `[0:v]scale=-2:200,trim=0:4.2[input];
+     [1:v]scale=-2:200,colorkey=0x00ff00:0.3:0.2,trim=0:4.2[vincent];
+     [input][vincent]overlay=enable='between(t,0,4.2)'[out]`,
     '-map', '[out]',
     outputFilename
   );
