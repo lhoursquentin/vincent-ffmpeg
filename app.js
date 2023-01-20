@@ -11,6 +11,7 @@ const bodyElt = document.getElementById('body');
 const statusElt = document.getElementById('status');
 const fileInputElt = document.getElementById('file-input');
 const runElt = document.getElementById('run');
+const loadingVincentElt = document.getElementById('loading-vincent');
 
 let inputFile;
 updateInputFile(fileInputElt.files[0]);
@@ -36,9 +37,12 @@ for (const ext of extensions) {
 }
 extToEltMap.get('mp4').checked = true;
 
-/** @param {string} status */
-function updateStatus(status) {
-  statusElt.textContent = status;
+/** @param {{ message: string, loading?: boolean }} status */
+function updateStatus({ message, loading }) {
+  statusElt.textContent = message;
+  if (loading !== undefined) {
+    loadingVincentElt.style.display = loading ? 'block' : 'none';
+  }
 }
 
 /** @returns {string} */
@@ -86,7 +90,7 @@ function createResultElt(buffer, fileName) {
 /** @param {File} file */
 async function vincentify(file) {
   runElt.disabled = true;
-  updateStatus('Vincentifying, please wait...');
+  updateStatus({ message: 'Vincentifying, please wait...', loading: true });
   const filePromise = fetchFile(file);
   await ffmpegLoadPromise;
   ffmpeg.FS('writeFile', vincentFileName, await vincentFilePromise);
@@ -107,7 +111,7 @@ async function vincentify(file) {
     '-map', '[out]',
     outputFilename
   );
-  updateStatus('Completed vincentification');
+  updateStatus({ message: 'Completed vincentification', loading: false });
   const outputData = ffmpeg.FS('readFile', outputFilename);
 
   createResultElt(outputData.buffer, outputFilename);
@@ -119,9 +123,9 @@ function updateInputFile(file) {
   const isValid = file !== undefined;
   if (isValid) {
     inputFile = file;
-    updateStatus(`Ready to vincentify ${file.name}`);
+    updateStatus({ message: `Ready to vincentify ${file.name}` });
   } else {
-    updateStatus('Please select an mp4/gif file to start');
+    updateStatus({ message: 'Please select an mp4/gif file to start' });
   }
   runElt.disabled = !isValid;
 }

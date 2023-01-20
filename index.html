@@ -19,6 +19,22 @@
         display: flex;
         flex-direction: column;
       }
+      .loading {
+        animation-duration: 1s;
+        animation-name: loading;
+        animation-iteration-count: infinite;
+      }
+      @keyframes loading {
+        from {
+          transform: rotate(0);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      #loading-vincent {
+        display: none;
+      }
     </style>
   </head>
   <body id="body">
@@ -26,7 +42,10 @@
       <legend>Choose your ouput type</legend>
     </fieldset>
     <input id="file-input" type="file">
-    <p id="status">Please select an mp4/gif file to start</p>
+    <p id="status">
+      Please select an mp4/gif file to start
+    </p>
+    <img id="loading-vincent" class="loading" src="./assets/favicon.ico">
     <button id="run" type="button" disabled>Run</button>
     <script type="module" src="./app.js"></script>
   </body>
