@@ -1,0 +1,12 @@
+{$ADDRESS} {
+  header {
+    Cross-Origin-Opener-Policy same-origin
+    Cross-Origin-Embedder-Policy require-corp
+  }
+  file_server {
+    root dist
+  }
+  log {
+    output file {$LOG_FILE}
+  }
+}

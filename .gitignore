@@ -1,5 +1,7 @@
 *.gif
 *.mp4
 *.webm
+*.ico
 node_modules
+logs/
 dist/

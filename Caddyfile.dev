@@ -1,0 +1,10 @@
+:8000 {
+  header {
+    Cross-Origin-Opener-Policy same-origin
+    Cross-Origin-Embedder-Policy require-corp
+  }
+  reverse_proxy http://localhost:{$PORT}
+  log {
+    output file {$LOG_FILE}
+  }
+}
