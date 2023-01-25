@@ -12,12 +12,23 @@ const statusElt = document.getElementById('status');
 const fileInputElt = document.getElementById('file-input');
 const runElt = document.getElementById('run');
 const loadingVincentElt = document.getElementById('loading-vincent');
+const outputHeightElt = document.getElementById('output-height');
 
 let inputFile;
 updateInputFile(fileInputElt.files[0]);
 
 fileInputElt.addEventListener('change', onFileSelection);
 runElt.addEventListener('click', () => vincentify(inputFile));
+outputHeightElt.addEventListener('change', ({ target }) => {
+  const nb = Number(target.value);
+  const min = Number(target.min);
+  const step = Number(target.step);
+  if (nb < min) {
+    target.value = min;
+  } else if (nb % step !== 0) {
+    target.value = nb - nb % step;
+  }
+});
 
 const ffmpeg = createFFmpeg({ log: true, corePath, workerPath, wasmPath });
 // Launch async processes ASAP, await them later
@@ -98,6 +109,7 @@ async function vincentify(file) {
 
   const ext = getChosenExtType();
   const basename = file.name.replace(/(.*)\..*/, '$1');
+  const heightPxStr = outputHeightElt.value;
   const outputFilename = `${basename}-vincent.${ext}`;
   // scaling to speed up processing & to make sure the height can be divided
   // by 2 (which is required by libx264)
@@ -105,8 +117,8 @@ async function vincentify(file) {
     '-i', file.name,
     '-i', vincentFileName,
     '-filter_complex',
-    `[0:v]scale=-2:200,trim=0:4.2[input];
-     [1:v]scale=-2:200,colorkey=0x00ff00:0.3:0.2,trim=0:4.2[vincent];
+    `[0:v]scale=-2:${heightPxStr},trim=0:4.2[input];
+     [1:v]scale=-2:${heightPxStr},colorkey=0x00ff00:0.3:0.2,trim=0:4.2[vincent];
      [input][vincent]overlay=enable='between(t,0,4.2)'[out]`,
     '-map', '[out]',
     outputFilename

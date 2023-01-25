@@ -35,6 +35,9 @@
       #loading-vincent {
         display: none;
       }
+      #output-height {
+        width: 9ch;
+      }
     </style>
   </head>
   <body id="body">
@@ -44,6 +47,10 @@
     <input id="file-input" type="file">
     <p id="status"></p>
     <img id="loading-vincent" class="loading" src="./assets/favicon.ico">
+    <label>
+      Output height (px):
+      <input id="output-height" type="number" step="2" value="720" min="10">
+    </label>
     <button id="run" type="button" disabled>Run</button>
     <script type="module" src="./app.js"></script>
   </body>
