@@ -1,10 +1,16 @@
 :8000 {
-  header {
-    Cross-Origin-Opener-Policy same-origin
-    Cross-Origin-Embedder-Policy require-corp
-  }
-  reverse_proxy http://localhost:{$PORT}
-  log {
-    output file {$LOG_FILE}
-  }
+	header {
+		Cross-Origin-Opener-Policy same-origin
+		Cross-Origin-Embedder-Policy require-corp
+	}
+	reverse_proxy http://localhost:{$PORT}
+	log {
+		output file {$LOG_FILE}
+		format filter {
+			wrap json
+			fields {
+				resp_headers delete
+			}
+		}
+	}
 }
