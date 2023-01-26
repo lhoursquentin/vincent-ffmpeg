@@ -1,7 +1,4 @@
-*.gif
-*.mp4
-*.webm
-*.ico
-node_modules
+assets/vincent/
+node_modules/
 logs/
 dist/
