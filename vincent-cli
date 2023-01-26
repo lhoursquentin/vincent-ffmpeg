@@ -1,0 +1,143 @@
+#!/bin/sh
+
+log_dir=./logs
+build_dir=./dist
+
+if ! [ -d "$log_dir" ]; then
+  mkdir "$log_dir" || exit
+fi
+
+run() {
+  printf '=> %s\n' "$*"
+  "$@"
+}
+
+help() {
+  printf '%s commands:\n%s' "$0" '
+  build                          build the production bundle
+  format                         format config files
+  help                           this help
+  install                        check & try to install required dependencies
+  serve <site address> [--sudo]  serve the production bundle
+                                 (optional --sudo to launch the server with
+                                 sudo, might be needed for privileged ports,
+                                 typically 80 and 443)
+  watch                          serve a dev build and hot-reload on file
+                                 changes
+'
+}
+
+cli_build() {
+  run ./node_modules/.bin/vite build \
+    --outDir "$build_dir"
+}
+
+cli_format() {
+  set -- caddy fmt --overwrite
+  run "$@" ./Caddyfile.dev
+  run "$@" ./Caddyfile.prod
+}
+
+cli_install() {
+  for dep in caddy npm; do
+    if ! command -v "$dep" > /dev/null; then
+      printf 'Missing required binary: %s\n' "$dep" >&2
+      exit 1
+    fi
+  done
+  run npm clean-install
+}
+
+cli_serve() {
+  if ! [ -d "$build_dir" ]; then
+    printf 'Missing build dir: %s
+Running build step first...\n' "$build_dir" >&2
+    cli_build || exit
+  fi
+
+  log_file="$log_dir"/access.log
+  caddy_file=./Caddyfile.prod
+
+  use_sudo=false
+
+  nb_args="$#"
+  while [ "$nb_args" -gt 0 ]; do
+    case "$1" in
+      --sudo) use_sudo=true ;;
+      *) set -- "$@" "$1" ;;
+    esac
+    shift
+    nb_args="$((nb_args - 1))"
+  done
+
+  site_address="$1"
+
+  if [ -z "$site_address" ]; then
+    printf 'Missing site address, aborting\n\n'
+    help
+    exit 1
+  fi >&2
+
+  set -- \
+    env \
+      BUILD_DIR="$build_dir" \
+      LOG_FILE="$log_file" \
+      SITE_ADDRESS="$site_address" \
+        caddy run --config "$caddy_file"
+
+  if "$use_sudo"; then
+    set -- sudo "$@"
+  fi
+
+  run exec "$@"
+}
+
+cli_watch() {
+  log_file="$log_dir"/access.dev.log
+  caddy_file=./Caddyfile.dev
+  vite_port=8001
+  proxy_port=8000
+  site_address=http://localhost:"$proxy_port"
+
+  printf '=== Starting to serve a dev build at %s ===\n\n' "$site_address"
+
+  on_exit() {
+    trap - EXIT
+    echo Killing current process group
+    kill 0
+  }
+
+  trap on_exit EXIT
+
+  run ./node_modules/.bin/vite \
+    --port "$vite_port" \
+    --strictPort \
+    --clearScreen false \
+    --logLevel error &
+
+  run env \
+    LOG_FILE="$log_file" \
+    PORT="$vite_port" \
+    SITE_ADDRESS="$site_address" \
+      caddy run --config "$caddy_file"
+
+  on_exit
+}
+
+case "$1" in
+  --help|-h|help|'')
+    help
+    exit
+    ;;
+  build|format|install|serve|watch)
+    cmd="$1"
+    shift
+    cli_"$cmd" "$@"
+    ;;
+  *)
+    printf 'Unknown command: %s\n\n' "$1" >&2
+    help >&2
+    exit 1
+    ;;
+esac
+

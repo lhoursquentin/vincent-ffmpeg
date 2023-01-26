@@ -1,10 +1,10 @@
-{$ADDRESS} {
+{$SITE_ADDRESS} {
 	header {
 		Cross-Origin-Opener-Policy same-origin
 		Cross-Origin-Embedder-Policy require-corp
 	}
 	file_server {
-		root dist
+		root {$BUILD_DIR}
 	}
 	log {
 		output file {$LOG_FILE}
