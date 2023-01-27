@@ -2,6 +2,7 @@
 	admin off
 	log {
 		output file {$LOG_FILE}.ext
+		format json
 	}
 }
 
