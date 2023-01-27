@@ -137,7 +137,7 @@ function updateInputFile(file) {
     inputFile = file;
     updateStatus({ message: `Ready to vincentify ${file.name}` });
   } else {
-    updateStatus({ message: 'Please select an mp4/gif file to start' });
+    updateStatus({ message: 'Please select an image/video file to start' });
   }
   runElt.disabled = !isValid;
 }
