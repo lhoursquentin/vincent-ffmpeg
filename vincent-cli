@@ -20,11 +20,6 @@ check_required_setup() {
       success=false
     fi
   done
-  for dep in gzip brotli; do
-    if ! command -v "$dep" > /dev/null; then
-      printf 'Missing optional executable: %s\n' "$dep" >&2
-    fi
-  done
   if ! [ -e ./node_modules/.bin/vite ]; then
     printf 'Missing required executable: ./node_modules/.bin/vite\n' >&2
     success=false

@@ -13,6 +13,10 @@ threshold_percent=95
 
 compress() {
   compress_util="$1"
+  if ! command -v "$compress_util" > /dev/null; then
+    printf 'WARNING: %s is not installed, skipping this compression\n' "$compress_util" >&2
+    return
+  fi
   ext="$2"
   file="$3"
   run "$compress_util" --keep "$file"
