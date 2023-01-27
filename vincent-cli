@@ -12,6 +12,27 @@ run() {
   "$@"
 }
 
+check_required_setup() {
+  success=true
+  for dep in caddy npm; do
+    if ! command -v "$dep" > /dev/null; then
+      printf 'Missing required executable: %s\n' "$dep" >&2
+      success=false
+    fi
+  done
+  for dep in gzip brotli; do
+    if ! command -v "$dep" > /dev/null; then
+      printf 'Missing optional executable: %s\n' "$dep" >&2
+    fi
+  done
+  if ! [ -e ./node_modules/.bin/vite ]; then
+    printf 'Missing required executable: ./node_modules/.bin/vite\n' >&2
+    success=false
+  fi
+  "$success"
+  return
+}
+
 help() {
   printf '%s commands:\n%s' "$0" '
   build [--skip-compression]     build the production bundle
@@ -51,12 +72,7 @@ cli_format() {
 }
 
 cli_install() {
-  for dep in caddy npm gzip brotli; do
-    if ! command -v "$dep" > /dev/null; then
-      printf 'Missing required binary: %s\n' "$dep" >&2
-      exit 1
-    fi
-  done
+  check_required_setup
   run npm clean-install
 }
 
@@ -136,18 +152,23 @@ cli_watch() {
   on_exit
 }
 
-case "$1" in
+cmd="$1"
+shift
+
+case "$cmd" in
   --help|-h|help|'')
     help
     exit
     ;;
   build|format|install|serve|watch)
-    cmd="$1"
-    shift
+    if [ "$cmd" != install ] && ! check_required_setup; then
+      printf 'Aborting, please install required dependencies\n' >&2
+      exit 1
+    fi
     cli_"$cmd" "$@"
     ;;
   *)
-    printf 'Unknown command: %s\n\n' "$1" >&2
+    printf 'Unknown command: %s\n\n' "$cmd" >&2
     help >&2
     exit 1
     ;;
