@@ -1,0 +1,33 @@
+#!/bin/sh
+
+run() {
+  printf '=> %s\n' "$*"
+  "$@"
+}
+
+get_nb_bytes() {
+  wc -c < "$1"
+}
+
+threshold_percent=95
+
+compress() {
+  compress_util="$1"
+  ext="$2"
+  file="$3"
+  run "$compress_util" --keep "$file"
+  compressed_file="$file"."$ext"
+  initial_size="$(get_nb_bytes "$file")"
+  compressed_size="$(get_nb_bytes "$compressed_file")"
+  size_similarity_percent="$((compressed_size * 100 / initial_size))"
+  printf 'Size similarity %s %% -> ' "$size_similarity_percent"
+  if [ "$size_similarity_percent" -ge "$threshold_percent" ]; then
+    echo removing
+    rm "$compressed_file"
+  else
+    echo keeping
+  fi
+}
+
+compress brotli br "$1"
+compress gzip gz "$1"

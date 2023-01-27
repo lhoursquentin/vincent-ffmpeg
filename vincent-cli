@@ -14,7 +14,7 @@ run() {
 
 help() {
   printf '%s commands:\n%s' "$0" '
-  build                          build the production bundle
+  build [--skip-compression]     build the production bundle
   format                         format config files
   help                           this help
   install                        check & try to install required dependencies
@@ -28,8 +28,20 @@ help() {
 }
 
 cli_build() {
+  skip_compression=false
+  for arg do
+    if [ "$arg" = --skip-compression ]; then
+      skip_compression=true
+      break
+    fi
+  done
+
   run ./node_modules/.bin/vite build \
     --outDir "$build_dir"
+
+  if ! "$skip_compression"; then
+    find "$build_dir" -type f -exec ./tools/compress {} ';'
+  fi
 }
 
 cli_format() {
@@ -39,7 +51,7 @@ cli_format() {
 }
 
 cli_install() {
-  for dep in caddy npm; do
+  for dep in caddy npm gzip brotli; do
     if ! command -v "$dep" > /dev/null; then
       printf 'Missing required binary: %s\n' "$dep" >&2
       exit 1

@@ -5,6 +5,7 @@
 	}
 	file_server {
 		root {$BUILD_DIR}
+		precompressed br gzip
 	}
 	log {
 		output file {$LOG_FILE}
