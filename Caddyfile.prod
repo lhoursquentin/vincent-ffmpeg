@@ -1,3 +1,9 @@
+{
+	log {
+		output file {$LOG_FILE}.ext
+	}
+}
+
 {$SITE_ADDRESS} {
 	header {
 		Cross-Origin-Opener-Policy same-origin
