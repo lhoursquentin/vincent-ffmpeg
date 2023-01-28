@@ -8,8 +8,20 @@
 
 {$SITE_ADDRESS} {
 	header {
+		# remove caddy's default
+		-Server
+		## Required for SharedArrayBuffer to work (on top of https)
 		Cross-Origin-Opener-Policy same-origin
 		Cross-Origin-Embedder-Policy require-corp
+		## "Optional" security from here
+		# FLoC
+		Permissions-Policy interest-cohort=()
+		# HSTS
+		Strict-Transport-Security max-age=31536000;
+		X-Frame-Options DENY
+		# Prevent browsers from incorrectly detecting non-scripts as scripts
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
 	}
 	file_server {
 		root {$BUILD_DIR}
