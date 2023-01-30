@@ -18,6 +18,9 @@
 		Permissions-Policy interest-cohort=()
 		# HSTS
 		Strict-Transport-Security max-age=31536000;
+		# XSS & friends
+		Content-Security-Policy "base-uri 'self'; sandbox allow-downloads allow-scripts allow-same-origin; frame-ancestors 'none'; form-action 'none'; default-src 'self'; connect-src 'self' data: blob:; script-src-elem 'self' blob:; script-src 'self' 'wasm-unsafe-eval' blob:; media-src 'self' blob:; img-src 'self' blob:; child-src 'none'; worker-src 'self' blob:; font-src 'none'; frame-src 'none'; manifest-src 'none'; object-src 'none'; script-src-attr 'none'; style-src-attr 'none'"
+		# In case frame-ancestors is ignored
 		X-Frame-Options DENY
 		# Prevent browsers from incorrectly detecting non-scripts as scripts
 		X-Content-Type-Options nosniff
