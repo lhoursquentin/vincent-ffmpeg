@@ -35,7 +35,7 @@ help() {
   help                           this help
   install                        check & try to install required dependencies
   serve <site address> [--sudo]  serve the production bundle
-                                 (optional --sudo to launch the server with
+        [--watch]                (optional --sudo to launch the server with
                                  sudo, might be needed for privileged ports,
                                  typically 80 and 443)
   watch                          serve a dev build and hot-reload on file
@@ -82,11 +82,14 @@ Running build step first...\n' "$build_dir" >&2
   caddy_file=./Caddyfile.prod
 
   use_sudo=false
+  use_watch=false
 
   nb_args="$#"
   while [ "$nb_args" -gt 0 ]; do
     case "$1" in
       --sudo) use_sudo=true ;;
+      --watch) use_watch=true ;;
+      --*) printf 'Unknown option: %s, ignoring\n' "$1" >&2 ;;
       *) set -- "$@" "$1" ;;
     esac
     shift
@@ -110,6 +113,10 @@ Running build step first...\n' "$build_dir" >&2
 
   if "$use_sudo"; then
     set -- sudo "$@"
+  fi
+
+  if "$use_watch"; then
+    set -- "$@" --watch
   fi
 
   run exec "$@"
