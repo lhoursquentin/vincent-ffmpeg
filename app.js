@@ -94,6 +94,27 @@ function getChosenExtType() {
 }
 
 /**
+ * @param {Blob}
+ * @returns {string}
+ */
+function getPrettyFileSize({ size }) {
+  const kB = {
+    bytes: 1000,
+    symbol: 'kB',
+  };
+  const MB = {
+    bytes: kB.bytes ** 2,
+    symbol: 'MB',
+  };
+  const unit = size < 100 * kB.bytes
+    ? kB
+    : MB
+  ;
+  const nbToDisplay = (size / unit.bytes).toFixed(1);
+  return `${nbToDisplay}${unit.symbol}`;
+}
+
+/**
  * @param {ArrayBufferLike} buffer
  * @param {string} fileName
  */
@@ -103,7 +124,9 @@ function createResultElt(buffer, fileName) {
     ? ['img', 'image']
     : ['video', 'video']
   ;
-  const url = URL.createObjectURL(new Blob([buffer], { type: `${mimeType}/${ext}` }));
+  const blob = new Blob([buffer], { type: `${mimeType}/${ext}` });
+  const prettyFileSize = getPrettyFileSize(blob);
+  const url = URL.createObjectURL(blob);
 
   const videoId = 'result-video-elt';
   document.getElementById(videoId)?.remove();
@@ -117,13 +140,17 @@ function createResultElt(buffer, fileName) {
 
   const downloadId = 'result-download-elt';
   document.getElementById(downloadId)?.remove();
+
   const downloadElt = document.createElement('a');
-  downloadElt.id = downloadId;
   downloadElt.href = url;
   downloadElt.download = fileName;
   downloadElt.textContent = 'Download';
 
-  bodyElt.prepend(videoElt, downloadElt);
+  const pElt = document.createElement('p');
+  pElt.id = downloadId;
+  pElt.append(downloadElt, ` (file size: ${prettyFileSize})`);
+
+  bodyElt.prepend(videoElt, pElt);
 }
 
 /** @param {File} file */
