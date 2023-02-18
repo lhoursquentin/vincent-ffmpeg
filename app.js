@@ -35,20 +35,46 @@ const ffmpeg = createFFmpeg({ log: true, corePath, workerPath, wasmPath });
 // Launch async processes ASAP, await them later
 const ffmpegLoadPromise = ffmpeg.load();
 const vincentFilePromise = fetchFile(vincentGreenScreenUrl);
+
 const extToEltMap = new Map();
-const videoExtensions = ['mp4', 'webm'];
-const imgExtensions = ['webp', 'gif'];
+const videoExtensions = [
+  {
+    ext: 'mp4',
+    speed: 'fast',
+    fileSize: 'small',
+  },
+  {
+    ext: 'webm',
+    speed: 'slow',
+    fileSize: 'small',
+  },
+];
+
+const imgExtensions = [
+  {
+    ext: 'webp',
+    speed: 'slow',
+    fileSize: 'small',
+  },
+  {
+    ext: 'gif',
+    speed: 'fast',
+    fileSize: 'huge',
+  },
+];
+
 const extensions = videoExtensions.concat(imgExtensions);
-for (const ext of extensions) {
+for (const { ext, speed, fileSize } of extensions) {
   const labelElt = document.createElement('label');
   const inputElt = document.createElement('input');
   inputElt.type = 'radio';
   inputElt.name = 'extension';
+  labelElt.title = `${speed} to generate, ${fileSize} file size`;
   labelElt.append(inputElt, ext);
   fieldsetElt.append(labelElt);
   extToEltMap.set(ext, inputElt);
 }
-extToEltMap.get('mp4').checked = true;
+extToEltMap.get('gif').checked = true;
 
 /** @param {{ message: string, loading?: boolean }} status */
 function updateStatus({ message, loading }) {
@@ -73,7 +99,7 @@ function getChosenExtType() {
  */
 function createResultElt(buffer, fileName) {
   const ext = getChosenExtType();
-  const [tag, mimeType] = imgExtensions.includes(ext)
+  const [tag, mimeType] = imgExtensions.some((imgExtInfo) => imgExtInfo.ext === ext)
     ? ['img', 'image']
     : ['video', 'video']
   ;
