@@ -13,6 +13,7 @@ const fileInputElt = document.getElementById('file-input');
 const runElt = document.getElementById('run');
 const loadingVincentElt = document.getElementById('loading-vincent');
 const outputHeightElt = document.getElementById('output-height');
+const fieldsetElt = document.getElementById('ext-fieldset');
 
 let inputFile;
 updateInputFile(fileInputElt.files[0]);
@@ -34,9 +35,10 @@ const ffmpeg = createFFmpeg({ log: true, corePath, workerPath, wasmPath });
 // Launch async processes ASAP, await them later
 const ffmpegLoadPromise = ffmpeg.load();
 const vincentFilePromise = fetchFile(vincentGreenScreenUrl);
-const fieldsetElt = document.getElementById('ext-fieldset');
 const extToEltMap = new Map();
-const extensions = ['mp4', 'webm', 'gif'];
+const videoExtensions = ['mp4', 'webm'];
+const imgExtensions = ['webp', 'gif'];
+const extensions = videoExtensions.concat(imgExtensions);
 for (const ext of extensions) {
   const labelElt = document.createElement('label');
   const inputElt = document.createElement('input');
@@ -71,7 +73,7 @@ function getChosenExtType() {
  */
 function createResultElt(buffer, fileName) {
   const ext = getChosenExtType();
-  const [tag, mimeType] = ext === 'gif'
+  const [tag, mimeType] = imgExtensions.includes(ext)
     ? ['img', 'image']
     : ['video', 'video']
   ;
@@ -120,6 +122,7 @@ async function vincentify(file) {
     `[0:v]scale=-2:${heightPxStr},trim=0:4.2[input];
      [1:v]scale=-2:${heightPxStr},colorkey=0x00ff00:0.3:0.2,trim=0:4.2[vincent];
      [input][vincent]overlay=enable='between(t,0,4.2)'[out]`,
+    '-loop', '0', // force looping (default loop setting for webp is 1, no loop)
     '-map', '[out]',
     outputFilename
   );
