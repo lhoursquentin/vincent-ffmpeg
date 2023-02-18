@@ -166,15 +166,15 @@ async function vincentify(file) {
   const basename = file.name.replace(/(.*)\..*/, '$1');
   const heightPxStr = outputHeightElt.value;
   const outputFilename = `${basename}-vincent.${ext}`;
-  // scaling to speed up processing & to make sure the height can be divided
-  // by 2 (which is required by libx264)
+  const targetTimeSeconds = '4.2';
+  // make sure the height can be divided by 2 (which is required by libx264)
   await ffmpeg.run(
     '-i', file.name,
     '-i', vincentFileName,
     '-filter_complex',
-    `[0:v]scale=-2:${heightPxStr},trim=0:4.2[input];
-     [1:v]scale=-2:${heightPxStr},colorkey=0x00ff00:0.3:0.2,trim=0:4.2[vincent];
-     [input][vincent]overlay=enable='between(t,0,4.2)'[out]`,
+    `[0:v]scale=-2:${heightPxStr},trim=0:${targetTimeSeconds}[input];
+     [1:v]scale=-2:${heightPxStr},colorkey=0x00ff00:0.3:0.2,trim=0:${targetTimeSeconds}[vincent];
+     [input][vincent]overlay=enable='between(t,0,${targetTimeSeconds})'[out]`,
     '-loop', '0', // force looping (default loop setting for webp is 1, no loop)
     '-map', '[out]',
     outputFilename
